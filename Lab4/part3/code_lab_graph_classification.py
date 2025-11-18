@@ -4,6 +4,7 @@ Graph Mining - ALTEGRAD - Nov 2024
 
 import networkx as nx
 import numpy as np
+import random
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
@@ -16,11 +17,10 @@ from torch_geometric.utils import to_networkx
 #load Mutag dataset
 def load_dataset():
 
-    ##################
-    # your code here #
-    ##################
-
+    dataset=TUDataset(root="/Data/felix.rosseeuw/LAB4-MVA/Lab4/datasets",name="MUTAG")
+    #print(dataset[0])
     y = [data.y.item() for data in dataset]
+    Gs=[to_networkx(data,to_undirected=True) for data in dataset]
     return Gs, y
 
 
@@ -106,18 +106,27 @@ def graphlet_kernel(Gs_train, Gs_test, n_samples=200):
     graphlets[3].add_edge(0,2)
 
     
-    phi_train = np.zeros((len(G_train), 4))
+    phi_train = np.zeros((len(Gs_train), 4))
     
-    ##################
-    # your code here #
-    ##################
-
-    phi_test = np.zeros((len(G_test), 4))
+    for i in range (len(Gs_train)) :
+        for j in range (n_samples) :
+            s=random.sample(Gs_train[i].nodes(),k=3)
+            sub=Gs_train[i].subgraph(s)
+            for m,el in enumerate(graphlets) :
+                if nx.is_isomorphic(sub,el) :
+                    phi_train[i,m]+=1
     
-    ##################
-    # your code here #
-    ##################
 
+    phi_test = np.zeros((len(Gs_test), 4))
+    
+    for i in range (len(Gs_test)) :
+        for j in range (n_samples) :
+            s=random.sample(Gs_test[i].nodes(),k=3)
+            sub=Gs_test[i].subgraph(s)
+            for m,el in enumerate(graphlets) :
+                if nx.is_isomorphic(sub,el) :
+                    phi_test[i,m]+=1
+    
     K_train = np.dot(phi_train, phi_train.T)
     K_test = np.dot(phi_test, phi_train.T)
 
@@ -130,14 +139,23 @@ K_train_sp, K_test_sp = shortest_path_kernel(G_train, G_test)
 
 ############## Task 9
 
-##################
-# your code here #
-##################
+K_train_g, K_test_g= graphlet_kernel(G_train,G_test,n_samples=200)
 
 
 
 ############## Task 10
 
-##################
-# your code here #
-##################
+
+clf = SVC(kernel="precomputed")
+clf.fit(K_train_sp,y_train)
+# Predict
+y_pred =clf.predict(K_test_sp)
+
+print(accuracy_score(y_test,y_pred))
+
+clf = SVC(kernel="precomputed")
+clf.fit(K_train_g,y_train)
+# Predict
+y_pred =clf.predict(K_test_g)
+
+print(accuracy_score(y_test,y_pred))
