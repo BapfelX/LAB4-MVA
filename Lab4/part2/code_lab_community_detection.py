@@ -58,6 +58,7 @@ def modularity(G, clustering):
     return(np.sum(L/m-U*U/(4*m**2)))
 
 
+
     
     
     

@@ -62,8 +62,8 @@ def get_vocab(train_docs, test_docs):
     return vocab
 
 
-path_to_train_set = '../datasets/train_5500_coarse.label'
-path_to_test_set = '../datasets/TREC_10_coarse.label'
+path_to_train_set = '/Data/felix.rosseeuw/LAB4-MVA/Lab4/datasets/train_5500_coarse.label'
+path_to_test_set = '/Data/felix.rosseeuw/LAB4-MVA/Lab4/datasets/TREC_10_coarse.label'
 
 # Read and pre-process train data
 train_data, y_train = load_file(path_to_train_set)
@@ -87,10 +87,11 @@ def create_graphs_of_words(docs, vocab, window_size):
     graphs = list()
     for idx,doc in enumerate(docs):
         G = nx.Graph()
-    
-        ##################
-        # your code here #
-        ##################
+        G.add_nodes_from(np.arange(0, len(vocab)))
+        for i,word in enumerate(doc) :
+            for j in range (window_size) :
+                if i+j<len(doc) :
+                    G.add_edge(vocab[word],vocab[doc[i+j]]) 
         
         graphs.append(G)
     
@@ -105,7 +106,7 @@ print("Example of graph-of-words representation of document")
 nx.draw_networkx(G_train_nx[3], with_labels=True)
 plt.show()
 
-
+"""
 from grakel.utils import graph_from_networkx
 from grakel.kernels import WeisfeilerLehman, VertexHistogram
 from sklearn.svm import SVC
@@ -144,3 +145,4 @@ print("Accuracy:", accuracy_score(y_pred, y_test))
 ##################
 # your code here #
 ##################
+"""
