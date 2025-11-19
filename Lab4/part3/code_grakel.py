@@ -86,15 +86,21 @@ import matplotlib.pyplot as plt
 def create_graphs_of_words(docs, vocab, window_size):
     graphs = list()
     for idx,doc in enumerate(docs):
+        dic=dict()
+        for word in doc :
+            if word not in dic:
+                dic[word] = vocab[word]
+        
         G = nx.Graph()
-        G.add_nodes_from(np.arange(0, len(vocab)))
+        for word, idx in dic.items():
+            G.add_node(idx, label=word)  
         for i,word in enumerate(doc) :
             for j in range (window_size) :
                 if i+j<len(doc) :
-                    G.add_edge(vocab[word],vocab[doc[i+j]]) 
+                    G.add_edge(vocab[word],vocab[doc[i+j]],weight=1) 
         
         graphs.append(G)
-    
+    print(f"All node data: {G.nodes(data=True)}")
     return graphs
 
 
@@ -106,7 +112,6 @@ print("Example of graph-of-words representation of document")
 nx.draw_networkx(G_train_nx[3], with_labels=True)
 plt.show()
 
-"""
 from grakel.utils import graph_from_networkx
 from grakel.kernels import WeisfeilerLehman, VertexHistogram
 from sklearn.svm import SVC
@@ -117,23 +122,23 @@ from sklearn.metrics import accuracy_score
 # Task 12
 
 # Transform networkx graphs to grakel representations
-G_train = # your code here #
-G_test = # your code here #
+G_train = graph_from_networkx(G_train_nx,node_labels_tag='label')
+G_test = graph_from_networkx(G_test_nx,node_labels_tag='label')
 
 # Initialize a Weisfeiler-Lehman subtree kernel
-gk = # your code here #
+gk = WeisfeilerLehman(normalize=False, n_iter=1, base_graph_kernel=VertexHistogram)
 
 # Construct kernel matrices
-K_train = # your code here #
-K_test = # your code here #
+K_train =gk.fit_transform(G_train)
+K_test = gk.transform(G_test)# your code here #
 
 #Task 13
 
 # Train an SVM classifier and make predictions
 
-##################
-# your code here #
-##################
+clf = SVC(kernel="precomputed")
+clf.fit(K_train, y_train)
+y_pred = clf.predict(K_test)
 
 # Evaluate the predictions
 print("Accuracy:", accuracy_score(y_pred, y_test))
@@ -141,8 +146,18 @@ print("Accuracy:", accuracy_score(y_pred, y_test))
 
 #Task 14
 
+from grakel.kernels import ShortestPath, VertexHistogram, WeisfeilerLehman
 
-##################
-# your code here #
-##################
-"""
+gk_sp = WeisfeilerLehman(normalize=False, n_iter=1, base_graph_kernel=ShortestPath)
+G_train = graph_from_networkx(G_train_nx,node_labels_tag='label',edge_labels_tag='weight')
+G_test = graph_from_networkx(G_test_nx,node_labels_tag='label',edge_labels_tag='weight')
+
+K_train_sp =gk_sp.fit_transform(G_train)
+K_test_sp = gk_sp.transform(G_test)
+
+clf = SVC(kernel="precomputed")
+clf.fit(K_train_sp, y_train)
+y_pred = clf.predict(K_test_sp)
+
+# Evaluate the predictions
+print("Accuracy:", accuracy_score(y_pred, y_test))
